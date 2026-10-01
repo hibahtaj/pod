@@ -1,11 +1,26 @@
 pipeline {
     agent any
 
+    environment {
+        // FIX: makes docker/kubectl available to Jenkins
+        PATH = "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
+
+        // your docker image name
+        IMAGE_NAME = "hibah123/kubeimage1"
+        IMAGE_TAG = "v1"
+    }
+
     stages {
+
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t kubdemoapp:v1 ."
+                sh "docker build -t kubdemoapp:${IMAGE_TAG} ."
             }
         }
 
@@ -17,10 +32,10 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image to Docker Hub') {
+        stage('Tag & Push Image') {
             steps {
-                sh "docker tag kubdemoapp:v1 hibah123/kubeimage1"
-                sh "docker push hibah123/kubeimage1"
+                sh "docker tag kubdemoapp:${IMAGE_TAG} ${IMAGE_NAME}"
+                sh "docker push ${IMAGE_NAME}"
             }
         }
 
@@ -34,10 +49,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo "Pipeline SUCCESS 🚀 App deployed successfully"
         }
         failure {
-            echo 'Pipeline failed. Please check logs.'
+            echo "Pipeline FAILED ❌ Check logs"
         }
     }
 }
