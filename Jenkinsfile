@@ -52,7 +52,7 @@ pipeline {
             echo "Pipeline SUCCESS 🚀 App deployed successfully"
         }
         failure {
-            echo "Pipeline FAILED ❌ Check logs"
+            echo "Pipeline FAILEDDDDD ❌ Check logs"
         }
     }
 }
