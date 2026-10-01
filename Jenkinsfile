@@ -1,11 +1,13 @@
 pipeline {
     agent any
 
-    stages {
+    environment {
+        PATH = "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
+    }
 
+    stages {
         stage('Build Docker Image') {
             steps {
-                echo "Build Docker Image"
                 sh "docker build -t kubdemoapp:v1 ."
             }
         }
@@ -16,27 +18,18 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Image') {
             steps {
                 sh "docker tag kubdemoapp:v1 vaddeusha/sample:kubeimage1"
                 sh "docker push vaddeusha/sample:kubeimage1"
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
                 sh "kubectl apply -f deployment.yaml"
                 sh "kubectl apply -f service.yaml"
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Please check logs.'
         }
     }
 }
