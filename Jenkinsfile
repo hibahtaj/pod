@@ -1,11 +1,8 @@
 pipeline {
     agent any
 
-    environment {
-        PATH = "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
-    }
-
     stages {
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t kubdemoapp:v1 ."
@@ -14,22 +11,33 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                sh "docker login -u vaddeusha -p Hima@2789"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                }
             }
         }
 
-        stage('Push Image') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                sh "docker tag kubdemoapp:v1 vaddeusha/sample:kubeimage1"
-                sh "docker push vaddeusha/sample:kubeimage1"
+                sh "docker tag kubdemoapp:v1 hibah123/kubeimage1"
+                sh "docker push hibah123/kubeimage1"
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
-                sh "kubectl apply -f deployment.yaml"
+                sh "kubectl apply -f deployment.yaml --validate=false"
                 sh "kubectl apply -f service.yaml"
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check logs.'
         }
     }
 }
