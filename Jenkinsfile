@@ -1,28 +1,41 @@
 pipeline {
     agent any
-
-    environment {
-        PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
-    }
-
-    stages {
-        stage('Build') {
+    stages
+    {
+        stage('Build Docker Image') {
             steps {
                 echo "Build Docker Image"
-                sh "docker build -t mypythonflaskapp ."
+                bat "docker build -t kubdemoapp:v1 ."
             }
         }
-
-        stage('Run') {
+        stage('Docker Login') {
             steps {
-                echo "Run application in Docker Container"
-
-                // Remove old container if it exists
-                sh "docker rm -f mycontainer || true"
-
-                // Run the new container
-                sh "docker run -d --name mycontainer -p 5001:5001 mypythonflaskapp"
+                  bat 'docker login -u vaddeusha -p Hima@2789'
+                }
             }
+        stage('push Docker Image to Docker Hub') {
+            steps {
+                echo "push Docker Image to Docker Hub"
+                bat "docker tag kubdemoapp:v1 vaddeusha/sample:kubeimage1"               
+                    
+                bat "docker push vaddeusha/sample:kubeimage1"
+                
+            }
+        }
+        stage('Deploy to Kubernetes') { 
+            steps { 
+                    // apply deployment & service 
+                    bat 'kubectl apply -f deployment.yaml --validate=false' 
+                    bat 'kubectl apply -f service.yaml' 
+            } 
+        }
+    }
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
